@@ -1,0 +1,9 @@
+[package]
+name = "health_monitor"
+version = "0.0.1"
+
+[dependencies]
+Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "framework/devnet" }
+
+[addresses]
+health_monitor = "0x0"
