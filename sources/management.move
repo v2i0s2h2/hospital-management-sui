@@ -1,14 +1,13 @@
 module health_monitor::management {
     use sui::object::{Self, UID, ID};
-    use sui::tx_context::{Self, TxContext, sender};
-    use sui::transfer::{Self, transfer};
+    use sui::tx_context::{TxContext, sender};
     use sui::clock::{Clock, timestamp_ms};
     use sui::balance::{Self, Balance};
     use sui::sui::{SUI};
     use sui::coin::{Self, Coin};
     use sui::table::{Self, Table};
     
-    use std::string::{Self, String};
+    use std::string::{String};
 
     const MALE: u8 = 0;
     const FAMALE: u8 = 1;
@@ -19,7 +18,7 @@ module health_monitor::management {
     const ERROR_INVALID_TIME : u64 = 3;
 
     // Hospital Structure
-    struct Hospital has key {
+    struct Hospital has key, store {
         id: UID,
         name: String,
         location: String,
@@ -134,6 +133,5 @@ module health_monitor::management {
     public fun get_bill_amount(hospital: &Hospital, ctx: &mut TxContext) : u64 {
         let bill = table::borrow(&hospital.bills, sender(ctx));
         bill.charges
-
     }
 }
