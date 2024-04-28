@@ -1,10 +1,12 @@
 module health_monitor::management {
     use sui::object::{Self, UID, ID};
-    use sui::tx_context::{Self, TxContext};
+    use sui::tx_context::{Self, TxContext, sender};
     use sui::transfer::{Self, transfer};
     use sui::clock::{Clock, timestamp_ms};
     use sui::balance::{Self, Balance};
     use sui::sui::{SUI};
+    use sui::coin::{Self, Coin};
+    use sui::table::{Self, Table};
     
     use std::string::{Self, String};
 
@@ -20,7 +22,8 @@ module health_monitor::management {
         name: String,
         location: String,
         contact_info: String,
-        hospital_type: String, // Public or Private
+        hospital_type: String,
+        bills: Table<address, Bill>
     }
 
     struct HospitalCap has key, store {
@@ -43,8 +46,7 @@ module health_monitor::management {
     }
 
     // Billing Structure
-    struct Bill has key {
-        id: UID,
+    struct Bill has store {
         patient_id: ID,
         charges: u64,
         payment_date: u64,
@@ -60,6 +62,7 @@ module health_monitor::management {
             location,
             contact_info,
             hospital_type,
+            bills: table::new(ctx)
         };
         let cap = HospitalCap {
             id: object::new(ctx),
@@ -86,20 +89,19 @@ module health_monitor::management {
     }
 
     // Generate a detailed bill for a patient
-    public fun generate_bill(cap: &HospitalCap, hospital: &Hospital, patient_id: ID, charges: u64, date: u64, c: &Clock, ctx: &mut TxContext): Bill {
+    public fun generate_bill(cap: &HospitalCap, hospital: &mut Hospital, patient_id: ID, charges: u64, date: u64, c: &Clock, ctx: &mut TxContext) {
         assert!(cap.hospital == object::id(hospital), ERROR_INVALID_ACCESS);
-        Bill {
-            id: object::new(ctx),
+        let bill = Bill {
             patient_id,
             charges,
             payment_date: timestamp_ms(c) + date,
-        }
+        };
+        table::add(&mut hospital.bills, sender(ctx), bill);
     }
 
     // // Pay a bill
-    // public fun pay_bill(bill: &mut Bill, payment_method: String, payment_date: u64) {
-    //     bill.payment_method = payment_method;
-    //     bill.payment_date = Some(payment_date);
+    // public fun pay_bill(bill: &mut Bill, coin: Coin<SUI>, c: &Clock) {
+ 
     // }
 
     // // =================== Utility Functions ===================
