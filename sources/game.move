@@ -12,6 +12,7 @@ module health_monitor::management {
     const FAMALE: u8 = 1;
 
     const ERROR_INVALID_GENDER: u64 = 0;
+    const ERROR_INVALID_ACCESS: u64 = 1;
 
     // Hospital Structure
     struct Hospital has key {
@@ -44,9 +45,8 @@ module health_monitor::management {
     // Billing Structure
     struct Bill has key {
         id: UID,
-        patient_id: UID,
+        patient_id: ID,
         charges: u64,
-        payment_method: String,
         payment_date: u64,
     }
 
@@ -86,13 +86,13 @@ module health_monitor::management {
     }
 
     // Generate a detailed bill for a patient
-    public fun generate_bill(patient_id: UID, charges: Vec<u64>, ctx: &mut TxContext): Bill {
+    public fun generate_bill(cap: &HospitalCap, hospital: &Hospital, patient_id: ID, charges: u64, date: u64, c: &Clock, ctx: &mut TxContext): Bill {
+        assert!(cap.hospital == object::id(hospital), ERROR_INVALID_ACCESS);
         Bill {
             id: object::new(ctx),
             patient_id,
             charges,
-            payment_method: "".to_string(),
-            payment_date: None,
+            payment_date: timestamp_ms(c) + date,
         }
     }
 
