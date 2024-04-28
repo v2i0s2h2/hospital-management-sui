@@ -2,12 +2,14 @@ module health_monitor::management {
     use sui::object::{Self, UID, ID};
     use sui::tx_context::{Self, TxContext};
     use sui::transfer::{Self, transfer};
+    use sui::clock::{Clock, timestamp_ms};
     
-
     use std::string::{Self, String};
 
     const MALE: u8 = 0;
     const FAMALE: u8 = 1;
+
+    const ERROR_INVALID_GENDER: u64 = 0;
 
     // Hospital Structure
     struct Hospital has key {
@@ -62,18 +64,20 @@ module health_monitor::management {
     }
 
     // // Admit a patient
-    // public fun admit_patient(name: String, age: u64, gender: String, contact_info: String, emergency_contact: String, admission_reason: String, ctx: &mut TxContext): Patient {
-    //     Patient {
-    //         id: object::new(ctx),
-    //         name,
-    //         age,
-    //         gender,
-    //         contact_info,
-    //         emergency_contact,
-    //         admission_reason,
-    //         discharge_date: None,
-    //     }
-    // }
+    public fun admit_patient(hospital: ID, name: String, age: u64, gender: u8, contact_info: String, emergency_contact: String, admission_reason: String, date: u64, c: &Clock, ctx: &mut TxContext): Patient {
+        assert!(gender == 0 || gender == 1, ERROR_INVALID_GENDER);
+        Patient {
+            id: object::new(ctx),
+            hospital,
+            name,
+            age,
+            gender,
+            contact_info,
+            emergency_contact,
+            admission_reason,
+            discharge_date: timestamp_ms(c) + date,
+        }
+    }
 
     // // Discharge a patient
     // public fun discharge_patient(patient: &mut Patient, discharge_date: u64) {
