@@ -41,6 +41,7 @@ module hospital::test_management {
             "123 Hospital Street".to_string(),
             "123-456-7890".to_string(),
             "Public".to_string(),
+            100, // Added capacity
             ts::ctx(&mut scenario)
         );
 
@@ -48,6 +49,7 @@ module hospital::test_management {
         assert_eq(hospital.address, "123 Hospital Street".to_string());
         assert_eq(hospital.contact_info, "123-456-7890".to_string());
         assert_eq(hospital.hospital_type, "Public".to_string());
+        assert_eq(hospital.capacity, 100);
 
         transfer::public_transfer(hospital, TEST_ADDRESS1);
 
@@ -60,7 +62,17 @@ module hospital::test_management {
         let mut scenario = ts::begin();
         next_tx(&mut scenario, TEST_ADDRESS1);
 
+        let hospital = hospital::management::create_hospital(
+            "General Hospital".to_string(),
+            "123 Hospital Street".to_string(),
+            "123-456-7890".to_string(),
+            "Public".to_string(),
+            100, // Added capacity
+            ts::ctx(&mut scenario)
+        );
+
         let patient = hospital::management::admit_patient(
+            hospital.id,
             "John Doe".to_string(),
             30,
             "Male".to_string(),
@@ -123,12 +135,13 @@ module hospital::test_management {
         );
 
         let charges = vector::empty<u64>();
-        vector::push_back(&charges, 500);
-        vector::push_back(&charges, 200);
+        vector::push_back(&mut charges, 500);
+        vector::push_back(&mut charges, 200);
 
         let bill = hospital::management::generate_bill(
             patient.id,
             charges,
+            "Credit Card".to_string(),
             ts::ctx(&mut scenario)
         );
 
@@ -136,6 +149,7 @@ module hospital::test_management {
         assert_eq(bill.charges.len(), 2);
         assert_eq(bill.charges[0], 500);
         assert_eq(bill.charges[1], 200);
+        assert_eq(bill.payment_method, "Credit Card".to_string());
 
         transfer::public_transfer(bill, TEST_ADDRESS1);
 
@@ -159,18 +173,19 @@ module hospital::test_management {
         );
 
         let charges = vector::empty<u64>();
-        vector::push_back(&charges, 500);
-        vector::push_back(&charges, 200);
+        vector::push_back(&mut charges, 500);
+        vector::push_back(&mut charges, 200);
 
         let mut bill = hospital::management::generate_bill(
             patient.id,
             charges,
+            "Credit Card".to_string(),
             ts::ctx(&mut scenario)
         );
 
-        hospital::management::pay_bill(&mut bill, "Credit Card".to_string(), 1682000000); // timestamp for payment
+        hospital::management::pay_bill(&mut bill, "Cash".to_string(), 1682000000); // timestamp for payment
 
-        assert_eq(bill.payment_method, "Credit Card".to_string());
+        assert_eq(bill.payment_method, "Cash".to_string());
         assert_eq(bill.payment_date, Some(1682000000));
 
         transfer::public_transfer(bill, TEST_ADDRESS1);
