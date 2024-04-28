@@ -3,6 +3,8 @@ module health_monitor::management {
     use sui::tx_context::{Self, TxContext};
     use sui::transfer::{Self, transfer};
     use sui::clock::{Clock, timestamp_ms};
+    use sui::balance::{Self, Balance};
+    use sui::sui::{SUI};
     
     use std::string::{Self, String};
 
@@ -18,6 +20,12 @@ module health_monitor::management {
         location: String,
         contact_info: String,
         hospital_type: String, // Public or Private
+    }
+
+    struct HospitalCap has key, store {
+        id: UID,
+        hospital: ID,
+        balance: Balance<SUI>
     }
 
     // Patient Structure
@@ -42,25 +50,23 @@ module health_monitor::management {
         payment_date: u64,
     }
 
-    // AdminCap Structure to control access
-    struct AdminCap has key {
-        id: UID,
-    }
-
-    // Initialize the module with admin capability
-    fun init(ctx: &mut TxContext) {
-        transfer::transfer(AdminCap { id: object::new(ctx) }, tx_context::sender(ctx));
-    }
-
     // Create a new hospital
-    public fun create_hospital(name: String, location: String, contact_info: String, hospital_type: String, ctx: &mut TxContext): Hospital {
-        Hospital {
-            id: object::new(ctx),
+    public fun create_hospital(name: String, location: String, contact_info: String, hospital_type: String, ctx: &mut TxContext): (Hospital, HospitalCap) {
+        let id_ = object::new(ctx);
+        let inner_ = object::uid_to_inner(&id_);
+        let hospital = Hospital {
+            id: id_,
             name,
             location,
             contact_info,
             hospital_type,
-        }
+        };
+        let cap = HospitalCap {
+            id: object::new(ctx),
+            hospital: inner_,
+            balance: balance::zero()
+        };
+        (hospital, cap)
     }
 
     // // Admit a patient
@@ -79,21 +85,16 @@ module health_monitor::management {
         }
     }
 
-    // // Discharge a patient
-    // public fun discharge_patient(patient: &mut Patient, discharge_date: u64) {
-    //     patient.discharge_date = Some(discharge_date);
-    // }
-
-    // // Generate a detailed bill for a patient
-    // public fun generate_bill(patient_id: UID, charges: Vec<u64>, ctx: &mut TxContext): Bill {
-    //     Bill {
-    //         id: object::new(ctx),
-    //         patient_id,
-    //         charges,
-    //         payment_method: "".to_string(),
-    //         payment_date: None,
-    //     }
-    // }
+    // Generate a detailed bill for a patient
+    public fun generate_bill(patient_id: UID, charges: Vec<u64>, ctx: &mut TxContext): Bill {
+        Bill {
+            id: object::new(ctx),
+            patient_id,
+            charges,
+            payment_method: "".to_string(),
+            payment_date: None,
+        }
+    }
 
     // // Pay a bill
     // public fun pay_bill(bill: &mut Bill, payment_method: String, payment_date: u64) {
