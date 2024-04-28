@@ -115,6 +115,13 @@ module health_monitor::management {
         patient.pay = true;
     }
 
+    public fun withdraw(cap: &HospitalCap, hospital: &mut Hospital, ctx: &mut TxContext) : Coin<SUI> {
+        assert!(cap.hospital == object::id(hospital), ERROR_INVALID_ACCESS);
+        let balance_ = balance::withdraw_all(&mut hospital.balance);
+        let coin_ = coin::from_balance(balance_, ctx);
+        coin_
+    }
+
     // // =================== Public view functions ===================
     public fun get_hospital_balance(hospital: &Hospital) : u64 {
         balance::value(&hospital.balance)
