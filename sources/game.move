@@ -115,36 +115,21 @@ module health_monitor::management {
         patient.pay = true;
     }
 
-    // // =================== Utility Functions ===================
-    // // Get hospital details
-    // public fun get_hospital(hospital: &Hospital): &Hospital {
-    //     hospital
-    // }
+    // // =================== Public view functions ===================
+    public fun get_hospital_balance(hospital: &Hospital) : u64 {
+        balance::value(&hospital.balance)
+    }
 
-    // // Get all patients
-    // public fun get_patients(patients: &[Patient]): &[Patient] {
-    //     patients
-    // }
+    public fun get_patient_status(patient: &Patient) : bool {
+        patient.pay
+    }
 
-    // // Delete a hospital record
-    // public fun delete_hospital(hospital: Hospital) {
-    //     object::delete(hospital.id);
-    // }
+    public fun get_bill_amount(hospital: &Hospital, ctx: &mut TxContext) : u64 {
+        let bill = table::borrow(&hospital.bills, sender(ctx));
+        bill.charges
 
-    // // Delete a patient record
-    // public fun delete_patient(patient: Patient) {
-    //     object::delete(patient.id);
-    // }
+    }
 
-    // // Update patient information
-    // public fun update_patient(patient: &mut Patient, new_name: String, new_contact_info: String) {
-    //     patient.name = new_name;
-    //     patient.contact_info = new_contact_info;
-    // }
 
-    // // Update hospital information
-    // public fun update_hospital(hospital: &mut Hospital, new_address: String, new_contact_info: String) {
-    //     hospital.address = new_address;
-    //     hospital.contact_info = new_contact_info;
-    // }
+
 }
