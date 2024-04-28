@@ -136,7 +136,4 @@ module health_monitor::management {
         bill.charges
 
     }
-
-
-
 }
