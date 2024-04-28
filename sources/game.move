@@ -32,34 +32,34 @@ module health_monitor::management {
     }
 
     // Billing Structure
-    // struct Bill has key {
-    //     id: UID,
-    //     patient_id: UID,
-    //     charges: Vec<u64>,
-    //     payment_method: String,
-    //     payment_date: Option<u64>,
-    // }
+    struct Bill has key {
+        id: UID,
+        patient_id: UID,
+        charges: u64,
+        payment_method: String,
+        payment_date: u64,
+    }
 
-    // // AdminCap Structure to control access
-    // struct AdminCap has key {
-    //     id: UID,
-    // }
+    // AdminCap Structure to control access
+    struct AdminCap has key {
+        id: UID,
+    }
 
-    // // Initialize the module with admin capability
-    // fun init(ctx: &mut TxContext) {
-    //     transfer::transfer(AdminCap { id: object::new(ctx) }, tx_context::sender(ctx));
-    // }
+    // Initialize the module with admin capability
+    fun init(ctx: &mut TxContext) {
+        transfer::transfer(AdminCap { id: object::new(ctx) }, tx_context::sender(ctx));
+    }
 
-    // // Create a new hospital
-    // public fun create_hospital(name: String, address: String, contact_info: String, hospital_type: String, ctx: &mut TxContext): Hospital {
-    //     Hospital {
-    //         id: object::new(ctx),
-    //         name,
-    //         address,
-    //         contact_info,
-    //         hospital_type,
-    //     }
-    // }
+    // Create a new hospital
+    public fun create_hospital(name: String, location: String, contact_info: String, hospital_type: String, ctx: &mut TxContext): Hospital {
+        Hospital {
+            id: object::new(ctx),
+            name,
+            location,
+            contact_info,
+            hospital_type,
+        }
+    }
 
     // // Admit a patient
     // public fun admit_patient(name: String, age: u64, gender: String, contact_info: String, emergency_contact: String, admission_reason: String, ctx: &mut TxContext): Patient {
