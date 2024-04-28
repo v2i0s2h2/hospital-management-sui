@@ -15,6 +15,8 @@ module health_monitor::management {
 
     const ERROR_INVALID_GENDER: u64 = 0;
     const ERROR_INVALID_ACCESS: u64 = 1;
+    const ERROR_INSUFFICIENT_FUNDS: u64 = 2;
+    const ERROR_INVALID_TIME : u64 = 3;
 
     // Hospital Structure
     struct Hospital has key {
@@ -23,13 +25,13 @@ module health_monitor::management {
         location: String,
         contact_info: String,
         hospital_type: String,
-        bills: Table<address, Bill>
+        bills: Table<address, Bill>,
+        balance: Balance<SUI>
     }
 
     struct HospitalCap has key, store {
         id: UID,
         hospital: ID,
-        balance: Balance<SUI>
     }
 
     // Patient Structure
@@ -43,10 +45,11 @@ module health_monitor::management {
         emergency_contact: String,
         admission_reason: String,
         discharge_date: u64,
+        pay: bool
     }
 
     // Billing Structure
-    struct Bill has store {
+    struct Bill has copy, store, drop {
         patient_id: ID,
         charges: u64,
         payment_date: u64,
@@ -62,12 +65,12 @@ module health_monitor::management {
             location,
             contact_info,
             hospital_type,
-            bills: table::new(ctx)
+            bills: table::new(ctx),
+            balance: balance::zero()
         };
         let cap = HospitalCap {
             id: object::new(ctx),
             hospital: inner_,
-            balance: balance::zero()
         };
         (hospital, cap)
     }
@@ -85,6 +88,7 @@ module health_monitor::management {
             emergency_contact,
             admission_reason,
             discharge_date: timestamp_ms(c) + date,
+            pay: false
         }
     }
 
@@ -100,9 +104,16 @@ module health_monitor::management {
     }
 
     // // Pay a bill
-    // public fun pay_bill(bill: &mut Bill, coin: Coin<SUI>, c: &Clock) {
- 
-    // }
+    public fun pay_bill(hospital: &mut Hospital, patient: &mut Patient, coin: Coin<SUI>, c: &Clock, ctx: &mut TxContext) {
+        let bill = table::remove(&mut hospital.bills, sender(ctx));
+        assert!(coin::value(&coin) == bill.charges, ERROR_INSUFFICIENT_FUNDS);
+        assert!(bill.payment_date < timestamp_ms(c), ERROR_INVALID_TIME);
+        // join the balance 
+        let balance_ = coin::into_balance(coin);
+        balance::join(&mut hospital.balance, balance_);
+        // bill payed
+        patient.pay = true;
+    }
 
     // // =================== Utility Functions ===================
     // // Get hospital details
